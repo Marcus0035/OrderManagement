@@ -12,8 +12,8 @@ using OrderManagement.Data;
 namespace OrderManagement.Migrations
 {
     [DbContext(typeof(OrderManagementContext))]
-    [Migration("20250307081709_AddDeletedPropertyCustomer")]
-    partial class AddDeletedPropertyCustomer
+    [Migration("20250307124024_Initial2")]
+    partial class Initial2
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -52,6 +52,44 @@ namespace OrderManagement.Migrations
                     b.ToTable("Customers");
                 });
 
+            modelBuilder.Entity("OrderManagement.Data.Models.Item", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Items");
+                });
+
+            modelBuilder.Entity("OrderManagement.Data.Models.ItemOrder", b =>
+                {
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("OrderId", "ItemId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("ItemOrders");
+                });
+
             modelBuilder.Entity("OrderManagement.Data.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -66,36 +104,30 @@ namespace OrderManagement.Migrations
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("OrderItemId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("OrderItemId");
-
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("OrderManagement.Data.Models.OrderItem", b =>
+            modelBuilder.Entity("OrderManagement.Data.Models.ItemOrder", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.HasOne("OrderManagement.Data.Models.Item", "Item")
+                        .WithMany("ItemOrders")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    b.HasOne("OrderManagement.Data.Models.Order", "Order")
+                        .WithMany("ItemOrders")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Navigation("Item");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(8,2)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("OrderItems");
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("OrderManagement.Data.Models.Order", b =>
@@ -106,10 +138,6 @@ namespace OrderManagement.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("OrderManagement.Data.Models.OrderItem", null)
-                        .WithMany("Orders")
-                        .HasForeignKey("OrderItemId");
-
                     b.Navigation("Customer");
                 });
 
@@ -118,9 +146,14 @@ namespace OrderManagement.Migrations
                     b.Navigation("Orders");
                 });
 
-            modelBuilder.Entity("OrderManagement.Data.Models.OrderItem", b =>
+            modelBuilder.Entity("OrderManagement.Data.Models.Item", b =>
                 {
-                    b.Navigation("Orders");
+                    b.Navigation("ItemOrders");
+                });
+
+            modelBuilder.Entity("OrderManagement.Data.Models.Order", b =>
+                {
+                    b.Navigation("ItemOrders");
                 });
 #pragma warning restore 612, 618
         }

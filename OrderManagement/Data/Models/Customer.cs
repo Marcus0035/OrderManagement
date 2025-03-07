@@ -8,5 +8,15 @@
         public string Phone { get; set; } = string.Empty;
         public List<Order> Orders { get; set; } = new();
         public bool Deleted { get; set; } = false;
+
+        public Customer()
+        {
+        }
+        public Customer(string name, string email, string phone)
+        {
+            Name = name;
+            Email = email;
+            Phone = phone;
+        }
     }
 }

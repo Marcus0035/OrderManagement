@@ -1,0 +1,73 @@
+﻿@using OrderManagement.Data.Models
+@using OrderManagement.Data
+@using OrderManagement.Shared.Modals
+
+@inject OrderManagementContext _context
+
+@page "/"
+
+<PageTitle>Orders</PageTitle>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-5">
+    <MudTable T="Order" Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm" Striped>
+        <HeaderContent>
+            <MudTh><strong><Mudtext>Orders</Mudtext></strong></MudTh>
+            <MudTh>Id</MudTh>
+            <MudTh>Customer</MudTh>
+            <MudTh>Total Due</MudTh>
+            <MudTh>Date</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd><MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary" OnClick="@(() => ShowBtnPress(context.Id))">@((context.ShowDetails == true) ? "Hide" : "Show") Details</MudButton></MudTd>
+            <MudTd DataLabel="Id">@context.Id</MudTd>
+            <MudTd DataLabel="Customer">@context.Customer.Name</MudTd>
+            <MudTd DataLabel="Total Due">@context.GetTotalDueAmount()</MudTd>
+            <MudTd DataLabel="Date">@context.OrderDate.ToString("dd.MM.yyyy")</MudTd>
+        </RowTemplate>
+        <ChildRowContent>
+            @if (context.ShowDetails)
+            {
+                <MudTr>
+                    <td colspan="5">
+                        <MudCard Elevation="0">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.body1">Order Details for <strong>Id: @context.Customer.Id Name: @context.Customer.Name</strong></MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent Class="pa-0">
+                                <MudTable Items="@context.ItemOrders" Context="Item" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                    <HeaderContent>
+                                        <MudTh>Id</MudTh>
+                                        <MudTh>Name</MudTh>
+                                        <MudTh>Price</MudTh>
+                                        <MudTh>Quantity</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="Id">@Item.Item.Id</MudTd>
+                                        <MudTd DataLabel="Name">@Item.Item.Name</MudTd>
+                                        <MudTd DataLabel="Price">@Item.Item.Price</MudTd>
+                                        <MudTd DataLabel="Quantity">@Item.Quantity</MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                            </MudCardContent>
+                        </MudCard>
+                    </td>
+                </MudTr>
+            }
+        </ChildRowContent>
+    </MudTable>
+</MudContainer>
+@code {
+    private List<Order> _orders = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _orders = await _context.GetOrdersAsync();
+    }
+
+    private void ShowBtnPress(int id)
+    {
+        Order order = _orders.First(f => f.Id == id);
+        order.ShowDetails = !order.ShowDetails;
+    }
+}

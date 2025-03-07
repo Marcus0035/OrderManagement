@@ -1,11 +1,19 @@
-﻿namespace OrderManagement.Data.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace OrderManagement.Data.Models
 {
     public class Order
     {
         public int Id { get; set; }
-        //Items, Quantity
-        public Dictionary<OrderItem, int> OrderItems = new();
+        public List<ItemOrder> ItemOrders { get; set; } = new();
         public Customer Customer { get; set; } = new();
         public DateTime OrderDate { get; set; } = DateTime.Now;
+        [NotMapped]
+        public bool ShowDetails { get; set; } = false;
+
+        public decimal GetTotalDueAmount()
+        {
+            return ItemOrders.Sum(x => x.Item.Price * x.Quantity); 
+        }
     }
 }

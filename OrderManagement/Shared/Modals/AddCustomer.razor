@@ -1,0 +1,66 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using OrderManagement.Data.Models
+@using OrderManagement.Data
+@inject ISnackbar Snackbar
+@inject OrderManagementContext _context
+
+<MudDialog>
+    <TitleContent>
+        <MudText>Add Customer</MudText>
+    </TitleContent>
+    <DialogContent>
+
+
+        <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudCardContent>
+                        <MudTextField Label="Name"
+                                      @bind-Value="model.Name" For="@(() => model.Name)" />
+                        <MudTextField Label="Email" Class="mt-3"
+                                      @bind-Value="model.Email" For="@(() => model.Email)" />
+                        <MudTextField Label="Phone" Class="mt-3"
+                                      @bind-Value="model.Phone" For="@(() => model.Phone)" />
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+                    </MudCardActions>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    CustomerRegister model = new CustomerRegister();
+    bool success;
+
+    public class CustomerRegister
+    {
+        [Required]
+        public string Name { get; set; }
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        [Required]
+        [Phone]
+        public string Phone { get; set; }
+
+
+    }
+
+    private void OnValidSubmit(EditContext context)
+    {
+        success = true;
+        MudDialog.Close(DialogResult.Ok(true));
+        Customer customer = new Customer(model.Name, model.Email, model.Phone);
+        _context.AddCustomerAsync(customer);
+        Snackbar.Add("Customer added", Severity.Success);
+
+    }
+}
