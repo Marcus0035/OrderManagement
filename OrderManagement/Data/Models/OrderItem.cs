@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace OrderManagement.Data
+namespace OrderManagement.Data.Models
 {
     public class OrderItem
     {

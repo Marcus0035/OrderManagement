@@ -1,4 +1,4 @@
-﻿namespace OrderManagement.Data
+﻿namespace OrderManagement.Data.Models
 {
     public class Order
     {
