@@ -6,6 +6,6 @@
         //Items, Quantity
         public Dictionary<OrderItem, int> OrderItems = new();
         public Customer Customer { get; set; } = new();
-        public DateOnly OrderDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+        public DateTime OrderDate { get; set; } = DateTime.Now;
     }
 }
