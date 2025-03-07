@@ -9,6 +9,7 @@ namespace OrderManagement.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<Item> Items { get; set; }
         public DbSet<ItemOrder> ItemOrders { get; set; }
+        public DbSet<UserSettings> UserSettings { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -32,42 +33,79 @@ namespace OrderManagement.Data
                 .WithMany(i => i.ItemOrders)
                 .HasForeignKey(io => io.ItemId);
         }
-
-        public async Task<List<Customer>> GetCustomersAsync()
+        //User
+        public async Task<bool> ExistingUsername(string userName)
         {
-            return await Customers.Where(x => !x.Deleted).ToListAsync();
+            var userSettings = await UserSettings.FirstOrDefaultAsync(x => x.Username == userName);
+            return userSettings != null;
+        }
+        public async Task<string> GetHashedPasswordForUser(string username)
+        {
+            var user = await UserSettings.FirstOrDefaultAsync(x => x.Username == username);
+            return user?.HashedPassword ?? string.Empty;
         }
 
-        public async Task RemoveCustomersAsync(IEnumerable<Customer> customers)
+        //Customer
+        public async Task<List<Customer>> GetCustomersAsync()
+        {
+            return await Customers.Where(x => !x.Removed).ToListAsync();
+        }
+        public async Task PostCustomerAsync(Customer customer)
+        {
+            await Customers.AddAsync(customer);
+            await SaveChangesAsync();
+        }
+        public async Task DeleteCustomersAsync(IEnumerable<Customer> customers)
         {
             foreach (var customer in customers)
             {
-                customer.Deleted = true;
+                customer.Removed = true;
             };
 
             await SaveChangesAsync();
         }
 
-        public async Task AddCustomerAsync(Customer customer)
-        {
-            await Customers.AddAsync(customer);
-            await SaveChangesAsync();
-        }
-
-        public async Task PostCustomerAsync(Customer customer)
-        {
-            Customers.Update(customer);
-            await SaveChangesAsync();
-        }
-
+        //Order
         public async Task<List<Order>> GetOrdersAsync()
         {
-            return await Orders.Include(x => x.Customer).Include(x => x.ItemOrders).ThenInclude(x => x.Item).ToListAsync();
+            return await Orders.Where(x => !x.Removed).Include(x => x.Customer).Include(x => x.ItemOrders).ThenInclude(x => x.Item).ToListAsync();
+        }
+        public async Task PostOrderAsync(Order order)
+        {
+            await Orders.AddAsync(order);
+            await SaveChangesAsync();
         }
 
+        //ItemOrder
         public async Task<List<ItemOrder>> GetItemOrdersAsync()
         {
-            return await ItemOrders.Include(x => x.Item).Include(x => x.Order).ToListAsync();
+            return await ItemOrders.Where(x => !x.Removed).Include(x => x.Item).Include(x => x.Order).ToListAsync();
         }
+
+        //Item
+        public async Task<List<Item>> GetItemsAsync()
+        {
+            return await Items.Where(x => !x.Removed).ToListAsync();
+        }
+        public async Task PostItemAsync(Item item)
+        {
+            await Items.AddAsync(item);
+            await SaveChangesAsync();
+        }
+        public async Task PutItemAsync(Item item)
+        {
+            Items.Update(item);
+            await SaveChangesAsync();
+        }
+        public async Task DeleteItemsAsync(IEnumerable<Item> items)
+        {
+            foreach (var item in items)
+            {
+                item.Removed = true;
+            };
+
+            await SaveChangesAsync();
+        }
+
     }
 }

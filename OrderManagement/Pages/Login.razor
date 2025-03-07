@@ -1,0 +1,71 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using OrderManagement.Data
+@using OrderManagement.Data.Models
+@using OrderManagement.Services
+
+@inject OrderManagementContext _context
+@inject LoginHash _loginHash
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigationManager
+@layout OrderManagement.Shared.LoginLayout
+
+
+@page "/"
+
+<PageTitle>Login</PageTitle>
+
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-5">
+    <MudPaper Elevation="5" Class="pa-4">
+        <MudText Align="Align.Center" Typo="Typo.h6">Enter your creditals (or password 123)</MudText>
+        <MudTextField @bind-Value="_username" Label="Username" Required="true" />
+        <MudTextField @bind-Value="_password" Label="Password" InputType="InputType.Password" Required="true" />
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Class="mt-5" Disabled="_disabled" OnClick="HandleValidSubmit">Login</MudButton>
+    </MudPaper>
+</MudContainer>
+
+
+@code {
+    private string _username = string.Empty;
+    private string _password = string.Empty;
+
+    private bool _disabled => string.IsNullOrWhiteSpace(_password) || string.IsNullOrWhiteSpace(_username);
+
+    private async Task HandleValidSubmit()
+    {
+        bool correctUsername = await _context.ExistingUsername(_username);
+
+        if (_password == "123")
+        {
+            SuccesLogin();
+        }
+
+        if (!correctUsername)
+        {
+            _snackbar.Add("Invalid username or password", Severity.Error);
+        }
+        else
+        {
+            string storedHashedPassword = await _context.GetHashedPasswordForUser(_username);
+            storedHashedPassword = storedHashedPassword.Trim('"');
+
+            PasswordVerificationResult passwordVerificationResult =
+                _loginHash.VerifyHashedPassword(_username, storedHashedPassword, _password);
+
+            if (passwordVerificationResult == PasswordVerificationResult.Success)
+            {
+                SuccesLogin();
+            }
+            else
+            {
+                _snackbar.Add("Invalid username or password", Severity.Error);
+            }
+        }
+    }
+
+    private void SuccesLogin()
+    {
+        _snackbar.Add("Login successful", Severity.Success);
+        _navigationManager.NavigateTo("/orders-grid");
+    }
+}

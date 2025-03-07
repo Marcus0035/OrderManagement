@@ -7,7 +7,7 @@
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public List<Order> Orders { get; set; } = new();
-        public bool Deleted { get; set; } = false;
+        public bool Removed { get; set; } = false;
 
         public Customer()
         {

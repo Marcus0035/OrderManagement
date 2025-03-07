@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OrderManagement.Data;
 
@@ -11,9 +12,10 @@ using OrderManagement.Data;
 namespace OrderManagement.Migrations
 {
     [DbContext(typeof(OrderManagementContext))]
-    partial class OrderManagementContextModelSnapshot : ModelSnapshot
+    [Migration("20250307161009_AddDeletedAtributToAll")]
+    partial class AddDeletedAtributToAll
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,6 +32,9 @@ namespace OrderManagement.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -41,9 +46,6 @@ namespace OrderManagement.Migrations
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Removed")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -105,11 +107,11 @@ namespace OrderManagement.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("Removed")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 

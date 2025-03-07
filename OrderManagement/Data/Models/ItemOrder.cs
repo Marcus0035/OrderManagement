@@ -9,5 +9,7 @@
         public Order Order { get; set; } = new();
 
         public int Quantity { get; set; } = 1;
+
+        public bool Removed { get; set; } = false;
     }
 }

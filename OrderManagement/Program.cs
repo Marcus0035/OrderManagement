@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using OrderManagement.Data;
+using OrderManagement.Services;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddMudServices();
 builder.Services.AddDbContext<OrderManagementContext>();
+builder.Services.AddSingleton<LoginHash>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

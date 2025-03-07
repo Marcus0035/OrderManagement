@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OrderManagement.Data;
 
@@ -11,9 +12,10 @@ using OrderManagement.Data;
 namespace OrderManagement.Migrations
 {
     [DbContext(typeof(OrderManagementContext))]
-    partial class OrderManagementContextModelSnapshot : ModelSnapshot
+    [Migration("20250307144455_AddUserEntity")]
+    partial class AddUserEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,6 +32,9 @@ namespace OrderManagement.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -41,9 +46,6 @@ namespace OrderManagement.Migrations
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Removed")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -65,9 +67,6 @@ namespace OrderManagement.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<bool>("Removed")
-                        .HasColumnType("bit");
-
                     b.HasKey("Id");
 
                     b.ToTable("Items");
@@ -83,9 +82,6 @@ namespace OrderManagement.Migrations
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
-
-                    b.Property<bool>("Removed")
-                        .HasColumnType("bit");
 
                     b.HasKey("OrderId", "ItemId");
 
@@ -107,9 +103,6 @@ namespace OrderManagement.Migrations
 
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("Removed")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 

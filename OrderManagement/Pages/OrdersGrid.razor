@@ -5,19 +5,33 @@
 @inject OrderManagementContext _context
 
 
-@page "/"
+@page "/orders-grid"
 
 
 <PageTitle>Orders</PageTitle>
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
-    <MudTable T="Order" Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm" Bordered SortLabel="Sort By" Filter="new Func<Order,bool>(CallFilter)">
+    <MudTable 
+        T="Order" 
+        Items="@_orders" 
+        Hover="true" 
+        Breakpoint="Breakpoint.Xs" 
+        Bordered SortLabel="Sort By" 
+        Filter="new Func<Order,bool>(CallFilter)" 
+            Striped>
+        <ColGroup>
+            <col style="width:28%;" />
+            <col style="width:18%;" />
+            <col style="width:18%" />
+            <col style="width:18%;" />
+            <col style="width:18%;" />
+        </ColGroup>
         <ToolBarContent>
             <MudText Typo="Typo.h6">Orders</MudText>
             <MudSpacer />
             <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
         </ToolBarContent>
         <HeaderContent>
-            <MudTh/>
+            <MudTh />
             <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.Id)">Id</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.Customer.Name)">Customer</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.GetTotalDueAmount())">Total Due</MudTableSortLabel></MudTh>
@@ -26,11 +40,11 @@
         <RowTemplate>
 
             <MudTd>
-                <MudButton StartIcon="@Icons.Material.Filled.ExpandMore" Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary" 
-                    OnClick="@(() => ShowBtnPress(context.Id))">@((context.ShowDetails == true) ? "Hide" : "Show") Details</MudButton>
-                <MudButton  StartIcon="@Icons.Material.Filled.Edit">Edit</MudButton>
+                <MudButton StartIcon="@Icons.Material.Filled.ExpandMore" Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary"
+                           OnClick="@(() => ShowBtnPress(context.Id))">@((context.ShowDetails == true) ? "Hide" : "Show") Details</MudButton>
+                <MudButton StartIcon="@Icons.Material.Filled.Edit">Edit</MudButton>
             </MudTd>
-            <MudTd DataLabel="Idddd">@context.Id</MudTd>
+            <MudTd DataLabel="Id">@context.Id</MudTd>
             <MudTd DataLabel="Customer">@context.Customer.Name</MudTd>
             <MudTd DataLabel="Total Due">@context.GetTotalDueAmount()</MudTd>
             <MudTd DataLabel="Date">@context.OrderDate.ToString("dd.MM.yyyy")</MudTd>
@@ -40,31 +54,30 @@
             {
                 <MudTr>
                     <td colspan="5">
-                        <MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4">
-                            <MudCard Elevation="3">
-                                <MudCardHeader>
-                                    <CardHeaderContent>
-                                        <MudText Typo="Typo.body1">Order Details for <strong>Id: @context.Customer.Id Name: @context.Customer.Name</strong></MudText>
-                                    </CardHeaderContent>
-                                </MudCardHeader>
-                                <MudCardContent Class="pa-0">
-                                    <MudTable Items="@context.ItemOrders" Context="Item" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
-                                        <HeaderContent>
-                                            <MudTh>Id</MudTh>
-                                            <MudTh>Name</MudTh>
-                                            <MudTh>Price</MudTh>
-                                            <MudTh>Quantity</MudTh>
-                                        </HeaderContent>
-                                        <RowTemplate>
-                                            <MudTd DataLabel="Id">@Item.Item.Id</MudTd>
-                                            <MudTd DataLabel="Name">@Item.Item.Name</MudTd>
-                                            <MudTd DataLabel="Price">@Item.Item.Price</MudTd>
-                                            <MudTd DataLabel="Quantity">@Item.Quantity</MudTd>
-                                        </RowTemplate>
-                                    </MudTable>
-                                </MudCardContent>
-                            </MudCard>
-                        </MudContainer>
+                        <MudCard Elevation="5" Class="p-1">
+                            <MudCardContent>
+                                <MudTable Items="@context.ItemOrders" Context="Item" Hover="true" Breakpoint="Breakpoint.Xs" Elevation="0" Striped>
+                                    <ColGroup>
+                                        <col style="width:25%;" />
+                                        <col style="width:25%;" />
+                                        <col style="width:25%;" />
+                                        <col style="width:25%;" />
+                                    </ColGroup>
+                                    <HeaderContent>
+                                        <MudTh>Id</MudTh>
+                                        <MudTh>Name</MudTh>
+                                        <MudTh>Price</MudTh>
+                                        <MudTh>Quantity</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="Id">@Item.Item.Id</MudTd>
+                                        <MudTd DataLabel="Name">@Item.Item.Name</MudTd>
+                                        <MudTd DataLabel="Price">@Item.Item.Price</MudTd>
+                                        <MudTd DataLabel="Quantity">@Item.Quantity</MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                            </MudCardContent>
+                        </MudCard>
                     </td>
                 </MudTr>
             }

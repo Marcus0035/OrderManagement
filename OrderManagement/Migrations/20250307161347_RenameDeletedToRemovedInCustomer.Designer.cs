@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OrderManagement.Data;
 
@@ -11,9 +12,10 @@ using OrderManagement.Data;
 namespace OrderManagement.Migrations
 {
     [DbContext(typeof(OrderManagementContext))]
-    partial class OrderManagementContextModelSnapshot : ModelSnapshot
+    [Migration("20250307161347_RenameDeletedToRemovedInCustomer")]
+    partial class RenameDeletedToRemovedInCustomer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

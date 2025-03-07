@@ -9,14 +9,25 @@
 
 <PageTitle>Customers</PageTitle>
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
-    <MudDataGrid T="Customer" Items="@_customers" SortMode="SortMode.Multiple" Filterable="true" QuickFilter="@QuickFilter"
-    Hideable="true" SelectedItems="_selectedCustomers" FooterClass="d-none" Striped ReadOnly="false" EditMode="DataGridEditMode.Cell" CommittedItemChanges="EditCustomer">
+    <MudDataGrid T="Customer"
+        Items="@_customers" 
+        Filterable="true" 
+        SortMode="SortMode.Multiple"
+        QuickFilter="@QuickFilter"
+        Hideable="true" 
+        SelectedItems="_selectedCustomers" 
+        ReadOnly="false" 
+        FooterClass="d-none" 
+        EditMode="DataGridEditMode.Cell" 
+        CommittedItemChanges="EditCustomer"
+        Striped>
+
         <ToolBarContent>
             <MudText Typo="Typo.h6">Customers</MudText>
             <MudSpacer />
             <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
             AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium" Disabled="@_disableDelete" OnClick="RemovePlayers" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium" Disabled="@_disableDelete" OnClick="RemoveCustomers" />
             <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Medium" OnClick="OpenAddPlayerDialog" />
         </ToolBarContent>
         <Columns>
@@ -46,7 +57,6 @@
         _customers = await _context.GetCustomersAsync();
     }
 
-    // quick filter - filter globally across multiple columns with the same input
     private Func<Customer, bool> QuickFilter => x =>
     {
         if (string.IsNullOrWhiteSpace(_searchString))
@@ -64,10 +74,10 @@
         return false;
     };
 
-    private async Task RemovePlayers()
+    private async Task RemoveCustomers()
     {
         _customers = _customers.Except(_selectedCustomers).ToList();
-        await _context.RemoveCustomersAsync(_selectedCustomers);
+        await _context.DeleteCustomersAsync(_selectedCustomers);
         _selectedCustomers.Clear();
     }
 
@@ -81,7 +91,6 @@
     private readonly DialogOptions _options = new() { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseOnEscapeKey = true };
     private Task OpenAddPlayerDialog()
     {
-
         return DialogService.ShowAsync<AddCustomer>("Add Customer", _options);
     }
 }

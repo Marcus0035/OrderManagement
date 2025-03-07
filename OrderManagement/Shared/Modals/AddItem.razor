@@ -6,7 +6,7 @@
 
 <MudDialog>
     <TitleContent>
-        <MudText>Add Customer</MudText>
+        <MudText>Add Item</MudText>
     </TitleContent>
     <DialogContent>
 
@@ -19,9 +19,7 @@
                         <MudTextField Label="Name"
                                       @bind-Value="model.Name" For="@(() => model.Name)" />
                         <MudTextField Label="Email" Class="mt-3"
-                                      @bind-Value="model.Email" For="@(() => model.Email)" />
-                        <MudTextField Label="Phone" Class="mt-3"
-                                      @bind-Value="model.Phone" For="@(() => model.Phone)" />
+                                      @bind-Value="model.Price" For="@(() => model.Price)" />
                     </MudCardContent>
                     <MudCardActions>
                         <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
@@ -35,32 +33,25 @@
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; }
 
-    CustomerRegister model = new CustomerRegister();
+    ItemRegister model = new ItemRegister();
     bool success;
 
-    public class CustomerRegister
+    public class ItemRegister
     {
         [Required]
         public string Name { get; set; }
 
         [Required]
-        [EmailAddress]
-        public string Email { get; set; }
-
-        [Required]
-        [Phone]
-        public string Phone { get; set; }
-
-
+        public decimal Price { get; set; }
     }
 
     private async Task OnValidSubmit(EditContext context)
     {
         success = true;
         MudDialog.Close(DialogResult.Ok(true));
-        Customer customer = new Customer(model.Name, model.Email, model.Phone);
-        await _context.PostCustomerAsync(customer);
-        Snackbar.Add("Customer added", Severity.Success);
+        Item item = new Item(model.Name, model.Price);
+        await _context.PostItemAsync(item);
+        Snackbar.Add("Item added", Severity.Success);
 
     }
 }
