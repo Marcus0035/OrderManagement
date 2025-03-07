@@ -8,7 +8,7 @@
 @inject IDialogService DialogService
 
 <PageTitle>Customers</PageTitle>
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-5">
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
     <MudDataGrid T="Customer" Items="@_customers" SortMode="SortMode.Multiple" Filterable="true" QuickFilter="@QuickFilter"
     Hideable="true" SelectedItems="_selectedCustomers" FooterClass="d-none" Striped ReadOnly="false" EditMode="DataGridEditMode.Cell" CommittedItemChanges="EditCustomer">
         <ToolBarContent>

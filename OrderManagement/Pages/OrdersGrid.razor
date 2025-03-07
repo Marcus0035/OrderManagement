@@ -4,21 +4,33 @@
 
 @inject OrderManagementContext _context
 
+
 @page "/"
 
+
 <PageTitle>Orders</PageTitle>
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-5">
-    <MudTable T="Order" Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm" Striped>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
+    <MudTable T="Order" Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm" Bordered SortLabel="Sort By" Filter="new Func<Order,bool>(CallFilter)">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Orders</MudText>
+            <MudSpacer />
+            <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
         <HeaderContent>
-            <MudTh><strong><Mudtext>Orders</Mudtext></strong></MudTh>
-            <MudTh>Id</MudTh>
-            <MudTh>Customer</MudTh>
-            <MudTh>Total Due</MudTh>
-            <MudTh>Date</MudTh>
+            <MudTh/>
+            <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.Id)">Id</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.Customer.Name)">Customer</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.GetTotalDueAmount())">Total Due</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.OrderDate)">Date</MudTableSortLabel></MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd><MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary" OnClick="@(() => ShowBtnPress(context.Id))">@((context.ShowDetails == true) ? "Hide" : "Show") Details</MudButton></MudTd>
-            <MudTd DataLabel="Id">@context.Id</MudTd>
+
+            <MudTd>
+                <MudButton StartIcon="@Icons.Material.Filled.ExpandMore" Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary" 
+                    OnClick="@(() => ShowBtnPress(context.Id))">@((context.ShowDetails == true) ? "Hide" : "Show") Details</MudButton>
+                <MudButton  StartIcon="@Icons.Material.Filled.Edit">Edit</MudButton>
+            </MudTd>
+            <MudTd DataLabel="Idddd">@context.Id</MudTd>
             <MudTd DataLabel="Customer">@context.Customer.Name</MudTd>
             <MudTd DataLabel="Total Due">@context.GetTotalDueAmount()</MudTd>
             <MudTd DataLabel="Date">@context.OrderDate.ToString("dd.MM.yyyy")</MudTd>
@@ -28,35 +40,41 @@
             {
                 <MudTr>
                     <td colspan="5">
-                        <MudCard Elevation="0">
-                            <MudCardHeader>
-                                <CardHeaderContent>
-                                    <MudText Typo="Typo.body1">Order Details for <strong>Id: @context.Customer.Id Name: @context.Customer.Name</strong></MudText>
-                                </CardHeaderContent>
-                            </MudCardHeader>
-                            <MudCardContent Class="pa-0">
-                                <MudTable Items="@context.ItemOrders" Context="Item" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
-                                    <HeaderContent>
-                                        <MudTh>Id</MudTh>
-                                        <MudTh>Name</MudTh>
-                                        <MudTh>Price</MudTh>
-                                        <MudTh>Quantity</MudTh>
-                                    </HeaderContent>
-                                    <RowTemplate>
-                                        <MudTd DataLabel="Id">@Item.Item.Id</MudTd>
-                                        <MudTd DataLabel="Name">@Item.Item.Name</MudTd>
-                                        <MudTd DataLabel="Price">@Item.Item.Price</MudTd>
-                                        <MudTd DataLabel="Quantity">@Item.Quantity</MudTd>
-                                    </RowTemplate>
-                                </MudTable>
-                            </MudCardContent>
-                        </MudCard>
+                        <MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4">
+                            <MudCard Elevation="3">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.body1">Order Details for <strong>Id: @context.Customer.Id Name: @context.Customer.Name</strong></MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent Class="pa-0">
+                                    <MudTable Items="@context.ItemOrders" Context="Item" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                        <HeaderContent>
+                                            <MudTh>Id</MudTh>
+                                            <MudTh>Name</MudTh>
+                                            <MudTh>Price</MudTh>
+                                            <MudTh>Quantity</MudTh>
+                                        </HeaderContent>
+                                        <RowTemplate>
+                                            <MudTd DataLabel="Id">@Item.Item.Id</MudTd>
+                                            <MudTd DataLabel="Name">@Item.Item.Name</MudTd>
+                                            <MudTd DataLabel="Price">@Item.Item.Price</MudTd>
+                                            <MudTd DataLabel="Quantity">@Item.Quantity</MudTd>
+                                        </RowTemplate>
+                                    </MudTable>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudContainer>
                     </td>
                 </MudTr>
             }
         </ChildRowContent>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
     </MudTable>
 </MudContainer>
+
 @code {
     private List<Order> _orders = new();
 
@@ -70,4 +88,19 @@
         Order order = _orders.First(f => f.Id == id);
         order.ShowDetails = !order.ShowDetails;
     }
+
+    // Search
+    private string _searchString = string.Empty;
+    private bool CallFilter(Order element) => FilterFunc(element, _searchString);
+
+    private bool FilterFunc(Order element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Customer.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
 }
+

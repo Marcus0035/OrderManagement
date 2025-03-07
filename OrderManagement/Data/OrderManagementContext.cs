@@ -8,7 +8,7 @@ namespace OrderManagement.Data
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<Item> Items { get; set; }
-        DbSet<ItemOrder> ItemOrders { get; set; }
+        public DbSet<ItemOrder> ItemOrders { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -63,6 +63,11 @@ namespace OrderManagement.Data
         public async Task<List<Order>> GetOrdersAsync()
         {
             return await Orders.Include(x => x.Customer).Include(x => x.ItemOrders).ThenInclude(x => x.Item).ToListAsync();
+        }
+
+        public async Task<List<ItemOrder>> GetItemOrdersAsync()
+        {
+            return await ItemOrders.Include(x => x.Item).Include(x => x.Order).ToListAsync();
         }
     }
 }
