@@ -28,7 +28,6 @@
             <MudSpacer />
             <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
                           AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-            @* <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium" Disabled="@_disableDelete" OnClick="RemoveCustomers" /> *@
             <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Medium" OnClick="OpenAddOrderPage" />
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium" Disabled="@_disableDeleteAndPay" OnClick="RemoveOrders" />
             <MudIconButton Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Success" Size="Size.Medium" Disabled="@_disableDeleteAndPay" OnClick="PayOrders" />

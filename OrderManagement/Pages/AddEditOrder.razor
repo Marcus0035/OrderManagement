@@ -3,81 +3,222 @@
 @using System.ComponentModel.DataAnnotations
 
 @inject OrderManagementContext _context
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigationManager
 
 @page "/add-edit-order/{SelectedOrderId:int?}"
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="mt-5">
     <MudPaper Class="pa-6 mb-5" Elevation="4">
-        <MudForm @ref="form" @bind-IsValid="@success" OnValidSubmit="OnValidSubmit">
+        <MudItem>
             <MudGrid Spacing="3">
                 <MudItem xs="12">
                     <MudSelect Label="Customer" @bind-Value="model.CustomerId" Required RequiredError="Customer is required!">
+                        <MudSelectItem Value="0" Disabled>-- Select Customer --</MudSelectItem>
                         @foreach (var customer in _customers)
                         {
                             <MudSelectItem Value="@customer.Id">@customer.Name</MudSelectItem>
                         }
                     </MudSelect>
+
                 </MudItem>
                 <MudItem xs="12">
-                    <MudDatePicker Label="Date" @bind-Value="model.Date" Required RequiredError="Date is required!" />
+                    <MudDatePicker Label="Date" Date="model.Date" DateChanged="@(args => ChangeDate(args))" Required RequiredError="Date is required!" Class="w-100" />
+                </MudItem>
+                <MudItem xs="12" Class="d-flex justify-space-between">
+                    <MudSwitch Label="Paid" Color="Color.Primary" @bind-Value="model.Paid" />
+                    <MudText Typo="Typo.h6">Total: @GetTotalAmount() Kč</MudText>
                 </MudItem>
                 <MudItem xs="12">
-                    <MudSwitch Label="Paid" @bind-Value="model.Paid" />
+                    <MudExpansionPanels MultiExpansion="true" @ref="expansionPanels">
+                        @foreach (var item in model.ItemOrders)
+                        {
+                            <MudExpansionPanel Text="@item.Item.Name" Icon="@Icons.Material.Filled.ExpandMore">
+                                <MudGrid Spacing="2" Class="pa-3">
+                                    <MudItem xs="3">
+                                        <MudNumericField Label="Quantity" @bind-Value="item.Quantity" Class="w-100" Min="1" />
+                                    </MudItem>
+                                    <MudItem xs="4">
+                                        <MudTextField Label="Price" Value="@(item.Item.Price)" ReadOnly="true" Class="w-100" />
+                                    </MudItem>
+                                    <MudItem xs="4">
+                                        <MudTextField Label="Total Price" Value="@(item.Quantity * item.Item.Price)" ReadOnly="true" Class="w-100" />
+                                    </MudItem>
+                                    <MudItem xs="1">
+                                        <MudIconButton Variant="Variant.Filled" Color="Color.Error" OnClick="() => RemoveItem(item)" Icon="@Icons.Material.Filled.DeleteForever" />
+                                    </MudItem>
+                                </MudGrid>
+                            </MudExpansionPanel>
+
+                        }
+                        @if (_notUsedItems.Count() > 0)
+                        {
+                            <MudExpansionPanel Text="Add Item" Icon="@Icons.Material.Filled.AddShoppingCart">
+                                <MudGrid Spacing="2" Class="pa-3">
+                                    <MudItem xs="8">
+                                        <MudSelect Label="Item" @bind-Value="newItemId" Class="w-100">
+                                            <MudSelectItem Value="0" Disabled>-- Select Item --</MudSelectItem>
+                                            @foreach (var item in _notUsedItems)
+                                            {
+                                                <MudSelectItem Value="@item.Id">@item.Name</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="3">
+                                        <MudNumericField Label="Quantity" @bind-Value="newItemQuantity" Class="w-100" Min="1" />
+                                    </MudItem>
+                                    <MudItem xs="1" Class="d-flex align-center">
+                                        <MudIconButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddNewItem" Icon="@Icons.Material.Filled.Add" />
+                                    </MudItem>
+                                </MudGrid>
+                            </MudExpansionPanel>
+                        }
+                    </MudExpansionPanels>
+                    <MudButton OnClick="ExpandAll" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ExpandMore">Expand All</MudButton>
+                    <MudButton OnClick="CollapseAll" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.ExpandLess">Collapse All</MudButton>
                 </MudItem>
-                <MudItem>
-                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)">Save</MudButton>
+                <MudItem xs="12">
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!IsFormValid())"
+                               StartIcon="@(_editing ? Icons.Material.Filled.Edit : Icons.Material.Filled.Save)" OnClick="(async () => await SaveEditOrder())">
+                        @(_editing ? "Save Changes" : "Add")
+                    </MudButton>
                 </MudItem>
             </MudGrid>
-        </MudForm>
+        </MudItem>
     </MudPaper>
 </MudContainer>
-
 @code {
     [Parameter]
-    public int SelectedOrderId { get; set; }
+    public int? SelectedOrderId { get; set; }
+
 
     private List<Customer> _customers = new();
     private List<Item> _items = new();
+    private List<Item> _notUsedItems = new();
     private MudForm form;
-    private bool success;
+    OrderRegister model = new();
+    private int newItemId;
+    private MudExpansionPanels expansionPanels;
+    private int newItemQuantity = 1;
+    private bool _editing = false;
 
     protected override async Task OnInitializedAsync()
     {
         _customers = await _context.GetCustomersAsync();
         _items = await _context.GetItemsAsync();
+        _notUsedItems = _items;
 
-        if (SelectedOrderId != 0)
+        if (SelectedOrderId != null)
         {
-            model = RegisterFromClass(await _context.GetOrderAsync(SelectedOrderId));
+            model = RegisterFromClass(await _context.GetOrderAsync((int)SelectedOrderId));
+            var usedItemIds = new HashSet<int>(model.ItemOrders.Select(io => io.ItemId));
+            _notUsedItems = _items.Where(item => !usedItemIds.Contains(item.Id)).ToList();
+            _editing = true;
         }
     }
 
-    OrderRegister model = new();
 
-    public class OrderRegister
+    private class OrderRegister
     {
-        [Required]
         public int CustomerId { get; set; }
-
-        [Required]
-        public DateTime Date { get; set; }
-
-        [Required]
+        public DateTime Date { get; set; } = DateTime.Now;
         public bool Paid { get; set; }
+        public List<ItemOrder> ItemOrders { get; set; } = new();
     }
 
     private OrderRegister RegisterFromClass(Order order)
     {
         return new OrderRegister
-        {
-            CustomerId = order.Customer.Id,
-            Date = order.OrderDate,
-            Paid = order.Paid
-        };
+            {
+                CustomerId = order.Customer.Id,
+                Date = order.OrderDate,
+                Paid = order.Paid,
+                ItemOrders = order.ItemOrders.Select(io => new ItemOrder
+                {
+                    ItemId = io.ItemId,
+                    Item = new Item
+                    {
+                        Id = io.Item.Id,
+                        Name = io.Item.Name,
+                        Price = io.Item.Price
+                    },
+                    Quantity = io.Quantity
+                }).ToList()
+            };
+    }
+    private Order ClassFromRegister(OrderRegister orderRegister)
+    {
+        return new Order
+            {
+                ItemOrders = orderRegister.ItemOrders,
+                Customer = _customers.Find(x => x.Id == orderRegister.CustomerId)!,
+                OrderDate = orderRegister.Date,
+                Paid = orderRegister.Paid
+            };
+    }
+    private bool IsFormValid()
+    {
+        return model.CustomerId > 0 && model.ItemOrders.Count > 0;
     }
 
-    private async Task OnValidSubmit(EditContext context)
+
+    private void ChangeDate(DateTime? newDate)
     {
-        // Handle form submission
+        if (newDate != null)
+            model.Date = (DateTime)newDate;
     }
+
+
+    private decimal GetTotalAmount()
+    {
+        return model.ItemOrders.Sum(io => io.Quantity * io.Item.Price);
+    }
+
+    private void AddNewItem()
+    {
+        var item = _items.FirstOrDefault(i => i.Id == newItemId);
+        if (item != null)
+        {
+            model.ItemOrders.Add(new ItemOrder
+                {
+                    Item = item,
+                    Quantity = newItemQuantity
+                });
+
+            _notUsedItems.Remove(item);
+        }
+    }
+
+    private void RemoveItem(ItemOrder itemOrder)
+    {
+        model.ItemOrders.Remove(itemOrder);
+    }
+
+    private void ExpandAll()
+    {
+        expansionPanels.ExpandAll();
+    }
+
+    private void CollapseAll()
+    {
+        expansionPanels.CollapseAll();
+    }
+
+    private async Task SaveEditOrder()
+    {
+        Order order = ClassFromRegister(model);
+        if (_editing)
+        {
+            order.Id = (int)SelectedOrderId!;
+            await _context.PutOrderAsync(order);
+            _snackbar.Add("Order updated", Severity.Success);
+        }
+        else
+        {
+            await _context.PostOrderAsync(order);
+            _snackbar.Add("Order added", Severity.Success);
+        }
+        _navigationManager.NavigateTo("/orders-grid");
+    }
+
 }

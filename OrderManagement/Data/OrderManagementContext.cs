@@ -103,6 +103,50 @@ namespace OrderManagement.Data
             };
             await SaveChangesAsync();
         }
+        public async Task PutOrderAsync(Order order)
+        {
+            var existingOrder = await Orders
+                .Include(o => o.ItemOrders)
+                    .ThenInclude(io => io.Item)
+                .Include(o => o.Customer)
+                .FirstOrDefaultAsync(o => o.Id == order.Id);
+
+            if (existingOrder != null)
+            {
+                Entry(existingOrder).CurrentValues.SetValues(order);
+
+                if (existingOrder.Customer.Id != order.Customer.Id)
+                {
+                    existingOrder.Customer = await Customers.FindAsync(order.Customer.Id) ?? order.Customer;
+                }
+                else
+                {
+                    Entry(existingOrder.Customer).CurrentValues.SetValues(order.Customer);
+                }
+
+                existingOrder.ItemOrders.Clear();
+                foreach (var itemOrder in order.ItemOrders)
+                {
+                    existingOrder.ItemOrders.Add(new ItemOrder
+                    {
+                        ItemId = itemOrder.ItemId,
+                        OrderId = order.Id,
+                        Quantity = itemOrder.Quantity,
+                        Item = await Items.FindAsync(itemOrder.ItemId) ?? itemOrder.Item
+                    });
+                }
+            }
+            else
+    {
+        Orders.Update(order);
+    }
+
+            await SaveChangesAsync();
+        }
+
+
+
+
 
         //ItemOrder
         public async Task<List<ItemOrder>> GetItemOrdersAsync()
