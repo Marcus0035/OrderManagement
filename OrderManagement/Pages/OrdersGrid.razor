@@ -1,119 +1,134 @@
 ﻿@using OrderManagement.Data.Models
 @using OrderManagement.Data
 @using OrderManagement.Shared.Modals
-
+@using System.Globalization;
 @inject OrderManagementContext _context
-
+@inject NavigationManager _navigationManager
 
 @page "/orders-grid"
 
 
 <PageTitle>Orders</PageTitle>
+
+
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
-    <MudTable 
-        T="Order" 
-        Items="@_orders" 
-        Hover="true" 
-        Breakpoint="Breakpoint.Xs" 
-        Bordered SortLabel="Sort By" 
-        Filter="new Func<Order,bool>(CallFilter)" 
-            Striped>
-        <ColGroup>
-            <col style="width:28%;" />
-            <col style="width:18%;" />
-            <col style="width:18%" />
-            <col style="width:18%;" />
-            <col style="width:18%;" />
-        </ColGroup>
+    <MudDataGrid T="Order"
+                 Items="@_orders"
+                 SelectedItems="@_selectedOrders"
+                 Filterable="true"
+                 SortMode="SortMode.Multiple"
+                 QuickFilter="@QuickFilter"
+                 Hideable="true"
+                 FooterClass="d-none"
+                 Striped Bordered Hover
+                 RowClick="OpenOrderDetails">
+
         <ToolBarContent>
             <MudText Typo="Typo.h6">Orders</MudText>
             <MudSpacer />
-            <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            @* <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium" Disabled="@_disableDelete" OnClick="RemoveCustomers" /> *@
+            <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Medium" OnClick="OpenAddOrderPage" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium" Disabled="@_disableDeleteAndPay" OnClick="RemoveOrders" />
+            <MudIconButton Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Success" Size="Size.Medium" Disabled="@_disableDeleteAndPay" OnClick="PayOrders" />
         </ToolBarContent>
-        <HeaderContent>
-            <MudTh />
-            <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.Id)">Id</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.Customer.Name)">Customer</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.GetTotalDueAmount())">Total Due</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.OrderDate)">Date</MudTableSortLabel></MudTh>
-        </HeaderContent>
-        <RowTemplate>
+        <Columns>
+            <SelectColumn T="Order" ShowInHeader="false" />
+            <PropertyColumn Property="x => x.Id" Title="Id" IsEditable="false" />
+            <TemplateColumn Title="Customer">
+                <CellTemplate>
+                    <MudStack Row>
+                        <MudText><b>@context.Item.Customer.Name</b></MudText>
+                    </MudStack>
+                </CellTemplate>
+            </TemplateColumn>
+            <PropertyColumn Property='x => x.GetTotalDueAmount()' Title="Total Due" Format="C" />
+            <PropertyColumn Property='x => x.OrderDate' Format="d" Title="Date" />
+            <TemplateColumn Title="Paid">
+                <CellTemplate>
+                    <MudStack Row>
+                        <MudChip Color="@GetBadgeColor(context.Item.Paid)" Variant="Variant.Text">
+                            @GetBadgeText(context.Item.Paid)
+                        </MudChip>
+                    </MudStack>
+                </CellTemplate>
+            </TemplateColumn>
 
-            <MudTd>
-                <MudButton StartIcon="@Icons.Material.Filled.ExpandMore" Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary"
-                           OnClick="@(() => ShowBtnPress(context.Id))">@((context.ShowDetails == true) ? "Hide" : "Show") Details</MudButton>
-                <MudButton StartIcon="@Icons.Material.Filled.Edit">Edit</MudButton>
-            </MudTd>
-            <MudTd DataLabel="Id">@context.Id</MudTd>
-            <MudTd DataLabel="Customer">@context.Customer.Name</MudTd>
-            <MudTd DataLabel="Total Due">@context.GetTotalDueAmount()</MudTd>
-            <MudTd DataLabel="Date">@context.OrderDate.ToString("dd.MM.yyyy")</MudTd>
-        </RowTemplate>
-        <ChildRowContent>
-            @if (context.ShowDetails)
-            {
-                <MudTr>
-                    <td colspan="5">
-                        <MudCard Elevation="5" Class="p-1">
-                            <MudCardContent>
-                                <MudTable Items="@context.ItemOrders" Context="Item" Hover="true" Breakpoint="Breakpoint.Xs" Elevation="0" Striped>
-                                    <ColGroup>
-                                        <col style="width:25%;" />
-                                        <col style="width:25%;" />
-                                        <col style="width:25%;" />
-                                        <col style="width:25%;" />
-                                    </ColGroup>
-                                    <HeaderContent>
-                                        <MudTh>Id</MudTh>
-                                        <MudTh>Name</MudTh>
-                                        <MudTh>Price</MudTh>
-                                        <MudTh>Quantity</MudTh>
-                                    </HeaderContent>
-                                    <RowTemplate>
-                                        <MudTd DataLabel="Id">@Item.Item.Id</MudTd>
-                                        <MudTd DataLabel="Name">@Item.Item.Name</MudTd>
-                                        <MudTd DataLabel="Price">@Item.Item.Price</MudTd>
-                                        <MudTd DataLabel="Quantity">@Item.Quantity</MudTd>
-                                    </RowTemplate>
-                                </MudTable>
-                            </MudCardContent>
-                        </MudCard>
-                    </td>
-                </MudTr>
-            }
-        </ChildRowContent>
+        </Columns>
+
         <PagerContent>
-            <MudTablePager />
+            <MudDataGridPager T="Order" />
         </PagerContent>
-    </MudTable>
+    </MudDataGrid>
 </MudContainer>
+
 
 @code {
     private List<Order> _orders = new();
+    private HashSet<Order> _selectedOrders = new();
+    private string _searchString = string.Empty;
+
+    private bool _disableDeleteAndPay => _selectedOrders.Count() == 0;
 
     protected override async Task OnInitializedAsync()
     {
+        CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("cs-CZ");
         _orders = await _context.GetOrdersAsync();
     }
 
-    private void ShowBtnPress(int id)
+    private Func<Order, bool> QuickFilter => x =>
     {
-        Order order = _orders.First(f => f.Id == id);
-        order.ShowDetails = !order.ShowDetails;
-    }
-
-    // Search
-    private string _searchString = string.Empty;
-    private bool CallFilter(Order element) => FilterFunc(element, _searchString);
-
-    private bool FilterFunc(Order element, string searchString)
-    {
-        if (string.IsNullOrWhiteSpace(searchString))
+        if (string.IsNullOrWhiteSpace(_searchString))
             return true;
-        if (element.Customer.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+
+        if (x.Id.ToString().Contains(_searchString))
             return true;
+
+        if (x.Customer.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (x.OrderDate.ToString("dd.MM.yyyy").Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+
         return false;
+    };
+
+    private async Task RemoveOrders()
+    {
+        _orders = _orders.Except(_selectedOrders).ToList();
+        await _context.DeleteOrderAsync(_selectedOrders);
+        _selectedOrders.Clear();
     }
+
+    private async Task PayOrders()
+    {
+        await _context.ChangePaymentStatusAsync(_selectedOrders);
+        _selectedOrders.Clear();
+    }
+    // bagde
+    private Color GetBadgeColor(bool paid)
+    {
+        return paid ? Color.Info : Color.Error;
+    }
+
+    private string GetBadgeText(bool paid)
+    {
+        return paid ? "Paid" : "Unpaid";
+    }
+
+    private void OpenAddOrderPage()
+    {
+        _navigationManager.NavigateTo("/add-edit-order");
+    }
+    private async Task OpenOrderDetails(DataGridRowClickEventArgs<Order> args)
+    {
+        var order = args.Item;
+
+        _navigationManager.NavigateTo($"/add-edit-order/{order.Id}");
+    }
+
+
 
 }
-

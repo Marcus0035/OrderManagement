@@ -1,0 +1,83 @@
+﻿@using OrderManagement.Data
+@using OrderManagement.Data.Models
+@using System.ComponentModel.DataAnnotations
+
+@inject OrderManagementContext _context
+
+@page "/add-edit-order/{SelectedOrderId:int?}"
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-5">
+    <MudPaper Class="pa-6 mb-5" Elevation="4">
+        <MudForm @ref="form" @bind-IsValid="@success" OnValidSubmit="OnValidSubmit">
+            <MudGrid Spacing="3">
+                <MudItem xs="12">
+                    <MudSelect Label="Customer" @bind-Value="model.CustomerId" Required RequiredError="Customer is required!">
+                        @foreach (var customer in _customers)
+                        {
+                            <MudSelectItem Value="@customer.Id">@customer.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudDatePicker Label="Date" @bind-Value="model.Date" Required RequiredError="Date is required!" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSwitch Label="Paid" @bind-Value="model.Paid" />
+                </MudItem>
+                <MudItem>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)">Save</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public int SelectedOrderId { get; set; }
+
+    private List<Customer> _customers = new();
+    private List<Item> _items = new();
+    private MudForm form;
+    private bool success;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _customers = await _context.GetCustomersAsync();
+        _items = await _context.GetItemsAsync();
+
+        if (SelectedOrderId != 0)
+        {
+            model = RegisterFromClass(await _context.GetOrderAsync(SelectedOrderId));
+        }
+    }
+
+    OrderRegister model = new();
+
+    public class OrderRegister
+    {
+        [Required]
+        public int CustomerId { get; set; }
+
+        [Required]
+        public DateTime Date { get; set; }
+
+        [Required]
+        public bool Paid { get; set; }
+    }
+
+    private OrderRegister RegisterFromClass(Order order)
+    {
+        return new OrderRegister
+        {
+            CustomerId = order.Customer.Id,
+            Date = order.OrderDate,
+            Paid = order.Paid
+        };
+    }
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        // Handle form submission
+    }
+}

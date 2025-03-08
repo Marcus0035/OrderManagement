@@ -55,6 +55,13 @@ namespace OrderManagement.Data
             await Customers.AddAsync(customer);
             await SaveChangesAsync();
         }
+        public async Task PutCustomerAsync(Customer customer)
+        {
+            var existingCustomer = Customers.First(x => x.Id == customer.Id);
+            existingCustomer = customer;
+            await SaveChangesAsync();
+
+        }
         public async Task DeleteCustomersAsync(IEnumerable<Customer> customers)
         {
             foreach (var customer in customers)
@@ -70,9 +77,30 @@ namespace OrderManagement.Data
         {
             return await Orders.Where(x => !x.Removed).Include(x => x.Customer).Include(x => x.ItemOrders).ThenInclude(x => x.Item).ToListAsync();
         }
+        public async Task<Order> GetOrderAsync(int Id)
+        {
+            return await Orders.Include(x => x.Customer).Include(x => x.ItemOrders).ThenInclude(x => x.Item).FirstAsync(x => x.Id == Id);
+
+        }
         public async Task PostOrderAsync(Order order)
         {
             await Orders.AddAsync(order);
+            await SaveChangesAsync();
+        }
+        public async Task DeleteOrderAsync(IEnumerable<Order> orders)
+        {
+            foreach (var order in orders)
+            {
+                order.Removed = true;
+            };
+            await SaveChangesAsync();
+        }
+        public async Task ChangePaymentStatusAsync(IEnumerable<Order> orders)
+        {
+            foreach (var order in orders)
+            {
+                order.Paid = !order.Paid;
+            };
             await SaveChangesAsync();
         }
 

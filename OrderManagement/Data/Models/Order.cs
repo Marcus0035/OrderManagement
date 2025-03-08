@@ -8,6 +8,7 @@ namespace OrderManagement.Data.Models
         public List<ItemOrder> ItemOrders { get; set; } = new();
         public Customer Customer { get; set; } = new();
         public DateTime OrderDate { get; set; } = DateTime.Now;
+        public bool Paid { get; set; }
         public bool Removed { get; set; } = false;
         [NotMapped]
         public bool ShowDetails { get; set; } = false;

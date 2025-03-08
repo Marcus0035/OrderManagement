@@ -10,13 +10,24 @@
 
 <PageTitle>Items</PageTitle>
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
-    <MudDataGrid T="Item" Items="@_items" SortMode="SortMode.Multiple" Filterable="true" QuickFilter="@QuickFilter"
-    Hideable="true" SelectedItems="_selectedItems" FooterClass="d-none" Striped ReadOnly="false" EditMode="DataGridEditMode.Cell" CommittedItemChanges="EditItem">
+    <MudDataGrid T="Item"
+                 Items="@_items"
+                 SortMode="SortMode.Multiple"
+                 Filterable="true"
+                 QuickFilter="@QuickFilter"
+                 Hideable="true"
+                 SelectedItems="_selectedItems"
+                 FooterClass="d-none"
+                 ReadOnly="false"
+                 EditMode="DataGridEditMode.Cell"
+                 CommittedItemChanges="EditItem"
+                 Striped Bordered Hover>
+
         <ToolBarContent>
             <MudText Typo="Typo.h6">Items</MudText>
             <MudSpacer />
             <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
-            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium" Disabled="@_disableDelete" OnClick="RemoveItems" />
             <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Medium" OnClick="OpenAddItemDialog" />
         </ToolBarContent>
@@ -24,7 +35,7 @@
             <SelectColumn T="Item" ShowInHeader="false" />
             <PropertyColumn Property="x => x.Id" Title="Id" IsEditable="false" />
             <PropertyColumn Property="x => x.Name" Title="Name" />
-            <PropertyColumn Property="x => x.Price" Title="Price"/>
+            <PropertyColumn Property="x => x.Price" Title="Price" />
         </Columns>
         <PagerContent>
             <MudDataGridPager T="Item" />
@@ -40,6 +51,11 @@
     private bool _disableDelete => _selectedItems.Count() == 0;
 
     protected override async Task OnInitializedAsync()
+    {
+        await LoadItems();
+    }
+
+    private async Task LoadItems()
     {
         _items = await _context.GetItemsAsync();
     }
@@ -67,12 +83,21 @@
         await _context.PutItemAsync(item);
     }
 
+
     // modal
 
     private readonly DialogOptions _options = new() { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseOnEscapeKey = true };
-    private Task OpenAddItemDialog()
+
+    private async Task OpenAddItemDialog()
     {
-        return DialogService.ShowAsync<AddItem>("Add Item", _options);
+        var parameters = new DialogParameters
+    {
+        { "OnItemAdded", EventCallback.Factory.Create(this, async () => await LoadItems()) }
+    };
+
+        var dialog = DialogService.Show<AddItem>("Add Item", parameters, _options);
+        await dialog.Result;
     }
+
 
 }

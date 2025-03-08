@@ -3,14 +3,13 @@
 @using OrderManagement.Data
 @inject ISnackbar Snackbar
 @inject OrderManagementContext _context
+@inject NavigationManager _navigationManager
 
 <MudDialog>
     <TitleContent>
         <MudText>Add Customer</MudText>
     </TitleContent>
     <DialogContent>
-
-
         <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
             <DataAnnotationsValidator />
             <MudGrid>
@@ -31,12 +30,15 @@
         </EditForm>
     </DialogContent>
 </MudDialog>
+
 @code {
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; }
 
+    [Parameter]
+    public EventCallback OnCustomerAdded { get; set; }
+
     CustomerRegister model = new CustomerRegister();
-    bool success;
 
     public class CustomerRegister
     {
@@ -44,23 +46,22 @@
         public string Name { get; set; }
 
         [Required]
-        [EmailAddress]
         public string Email { get; set; }
 
         [Required]
-        [Phone]
         public string Phone { get; set; }
-
-
     }
 
     private async Task OnValidSubmit(EditContext context)
     {
-        success = true;
-        MudDialog.Close(DialogResult.Ok(true));
         Customer customer = new Customer(model.Name, model.Email, model.Phone);
         await _context.PostCustomerAsync(customer);
         Snackbar.Add("Customer added", Severity.Success);
+        MudDialog.Close(DialogResult.Ok(true));
 
+        if (OnCustomerAdded.HasDelegate)
+        {
+            await OnCustomerAdded.InvokeAsync();
+        }
     }
 }

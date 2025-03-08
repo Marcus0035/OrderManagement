@@ -29,12 +29,13 @@
     private string _username = string.Empty;
     private string _password = string.Empty;
 
-    private bool _disabled => string.IsNullOrWhiteSpace(_password) || string.IsNullOrWhiteSpace(_username);
+    private bool _disabled => string.IsNullOrWhiteSpace(_password) || string.IsNullOrWhiteSpace(_username) || _isLogin;
+    private bool _isLogin = false;
 
     private async Task HandleValidSubmit()
     {
+        _isLogin = true;
         bool correctUsername = await _context.ExistingUsername(_username);
-
         if (_password == "123")
         {
             SuccesLogin();
@@ -61,6 +62,7 @@
                 _snackbar.Add("Invalid username or password", Severity.Error);
             }
         }
+        _isLogin = false;
     }
 
     private void SuccesLogin()
