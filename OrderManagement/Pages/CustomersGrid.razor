@@ -35,15 +35,7 @@
             <PropertyColumn Property="x => x.Id" Title="Id" IsEditable="false" />
             <PropertyColumn Property="x => x.Name" Title="Name" />
             <PropertyColumn Property="x => x.Orders.Count()" Title="Orders Count" IsEditable="false" />
-            <TemplateColumn Title="Email">
-                <CellTemplate>
-                    @context.Item.Email
-                </CellTemplate>
-                <EditTemplate>
-                    <MudTextField @bind-Value="context.Item.Email" Pattern="_emailRegex" />
-                </EditTemplate>
-            </TemplateColumn>
-
+            <PropertyColumn Property="x => x.Email" Title="Email" />
             <TemplateColumn Title="Phone"> 
                 <CellTemplate>
                     @context.Item.Phone
