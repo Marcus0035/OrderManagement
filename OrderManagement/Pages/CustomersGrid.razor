@@ -36,7 +36,7 @@
             <PropertyColumn Property="x => x.Name" Title="Name" />
             <PropertyColumn Property="x => x.Orders.Count()" Title="Orders Count" IsEditable="false" />
             <PropertyColumn Property="x => x.Email" Title="Email" />
-            <TemplateColumn Title="Phone"> 
+            <TemplateColumn Title="Phone">
                 <CellTemplate>
                     @context.Item.Phone
                 </CellTemplate>
@@ -54,7 +54,6 @@
     private string _searchString;
 
     private string _phoneRegex = @"^\+?(\d{1,3})?[\s\-]?\(?\d{1,4}\)?[\s\-]?\d{1,4}[\s\-]?\d{1,4}$";
-    private string _emailRegex = @"^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$";
 
     private List<Customer> _customers = new List<Customer>();
     private HashSet<Customer> _selectedCustomers = new();
