@@ -12,7 +12,8 @@ This project is an Order Management System built with the following technologies
 
 
 
-<video src="https://github.com/user-attachments/assets/3ebecb94-2a66-4281-b904-8f7ea87b6945" autoplay>
+<video src="https://github.com/user-attachments/assets/3ebecb94-2a66-4281-b904-8f7ea87b6945" autoplay></video>
+
 
 ## Requirements
 
