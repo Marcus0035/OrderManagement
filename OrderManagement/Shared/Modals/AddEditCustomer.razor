@@ -20,11 +20,11 @@
                                       @bind-Value="_model.Name" For="@(() => _model.Name)" />
                         <MudTextField Label="Email" Class="mt-3"
                                       @bind-Value="_model.Email" For="@(() => _model.Email)" />
-                        <MudNumericField Label="Phone" Class="mt-3"
+                        <MudTextField Label="Phone" Class="mt-3"
                                       @bind-Value="_model.Phone" For="@(() => _model.Phone)" />
                     </MudCardContent>
                     <MudCardActions>
-                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mlauto">Register</MudButton>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mlauto">Save</MudButton>
                     </MudCardActions>
                 </MudItem>
             </MudGrid>
@@ -33,17 +33,15 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter]
-    private MudDialogInstance _mudDialog { get; set; }
-    private bool _editing = false;
-    private CustomerRegister _model = new CustomerRegister();
-
     [Parameter]
     public EventCallback OnCustomerAdded { get; set; }
     [Parameter]
     public int CustomerId { get; set; }
 
-
+    [CascadingParameter]
+    private MudDialogInstance _mudDialog { get; set; }
+    private bool _editing = false;
+    private CustomerRegister _model = new CustomerRegister();
 
     protected override async Task OnInitializedAsync()
     {

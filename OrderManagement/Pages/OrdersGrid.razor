@@ -12,22 +12,27 @@
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
     <MudDataGrid T="Order"
-    Items="@_orders"
-    SelectedItems="@_selectedOrders"
-    Filterable="true"
-    SortMode="SortMode.Multiple"
-    QuickFilter="@QuickFilter"
-    Hideable="true"
-    FooterClass="d-none"
-    Striped Bordered Hover
-    RowClick="OpenOrderDetails"
-    HeaderClass="customHeaderClass">
+                 Items="@_filteredOrders"
+                 SelectedItems="@_selectedOrders"
+                 Filterable="true"
+                 SortMode="SortMode.Multiple"
+                 QuickFilter="@QuickFilter"
+                 Hideable="true"
+                 FooterClass="d-none"
+                 Striped Bordered Hover
+                 RowClick="OpenOrderDetails"
+                 HeaderClass="customHeaderClass">
 
         <ToolBarContent>
             <MudText Typo="Typo.h6">Orders</MudText>
+            <MudChipSet Class="ms-5" SelectedChipChanged="(a) => ChangeOrdersToShow(a)">
+                <MudChip Color="Color.Info" Variant="Variant.Text" Value="0">All</MudChip>
+                <MudChip Color="Color.Error" Variant="Variant.Text" Value="1">Not Paid</MudChip>
+                <MudChip Color="Color.Success" Variant="Variant.Text" Value="2">Paid</MudChip>
+            </MudChipSet>
             <MudSpacer />
             <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
-            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
             <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Medium" OnClick="OpenAddOrderPage" />
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium" Disabled="@_disableDeleteAndPay" OnClick="RemoveOrders" />
             <MudIconButton Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Success" Size="Size.Medium" Disabled="@_disableDeleteAndPay" OnClick="PayOrders" />
@@ -35,16 +40,10 @@
         <Columns>
             <SelectColumn T="Order" ShowInHeader="false" />
             <PropertyColumn Property="x => x.Id" Title="Id" IsEditable="false" />
-            <TemplateColumn Title="Customer">
-                <CellTemplate>
-                    <MudStack Row>
-                        <MudText><b>@context.Item.Customer.Name</b></MudText>
-                    </MudStack>
-                </CellTemplate>
-            </TemplateColumn>
+            <PropertyColumn Property='x => x.Customer.Name' Title="Customer" />
             <PropertyColumn Property='x => x.GetTotalDueAmount()' Title="Total Due" Format="C" />
             <PropertyColumn Property='x => x.OrderDate' Format="d" Title="Date" />
-            <TemplateColumn Title="Paid">
+            <TemplateColumn Title="Paid" Filterable="false" Sortable="false">
                 <CellTemplate>
                     <MudStack Row>
                         <MudChip Color="@GetBadgeColor(context.Item.Paid)" Variant="Variant.Text">
@@ -53,14 +52,15 @@
                     </MudStack>
                 </CellTemplate>
             </TemplateColumn>
-
         </Columns>
+
 
         <PagerContent>
             <MudDataGridPager T="Order" />
         </PagerContent>
     </MudDataGrid>
 </MudContainer>
+
 
 <style>
     .customHeaderClass {
@@ -70,14 +70,40 @@
 
 @code {
     private List<Order> _orders = new();
+    private List<Order> _filteredOrders = new();
     private HashSet<Order> _selectedOrders = new();
     private string _searchString = string.Empty;
-
     private bool _disableDeleteAndPay => _selectedOrders.Count() == 0;
+
     protected override async Task OnInitializedAsync()
     {
         CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("cs-CZ");
         _orders = await _context.GetOrdersAsync();
+        _filteredOrders = _orders;
+    }
+
+    private void ChangeOrdersToShow(MudChip? x)
+    {
+        // Clear selected orders
+        // to change payment status or delete only visible order
+        _selectedOrders.Clear();
+        if (x == null)
+        {
+            _filteredOrders = _orders;
+            return;
+        }
+        switch ((int)x.Value)
+        {
+            case 1:
+                _filteredOrders = _orders.Where(x => !x.Paid).ToList(); // Not Paid
+                break;
+            case 2:
+                _filteredOrders = _orders.Where(x => x.Paid).ToList(); // Paid
+                break;
+            default:
+                _filteredOrders = _orders;
+                break;
+        }
     }
 
     private Func<Order, bool> QuickFilter => x =>
@@ -101,6 +127,8 @@
     private async Task RemoveOrders()
     {
         _orders = _orders.Except(_selectedOrders).ToList();
+        _filteredOrders = _filteredOrders.Except(_selectedOrders).ToList();
+
         await _context.DeleteOrderAsync(_selectedOrders);
         _selectedOrders.Clear();
     }
@@ -124,13 +152,12 @@
 
     //Styles
     //header color
-    private string HeaderBackgroundColor => $"{Colors.Grey.Lighten4}";
-    private string GetHeaderClass() => $"background-color:{HeaderBackgroundColor};";
+    private string GetHeaderClass() => $"background-color:{Colors.Grey.Lighten4};";
 
     // bagde
     private Color GetBadgeColor(bool paid)
     {
-        return paid ? Color.Info : Color.Error;
+        return paid ? Color.Success : Color.Error;
     }
 
     private string GetBadgeText(bool paid)

@@ -22,14 +22,15 @@
         <MudTextField
             @bind-Value="_password" 
             Label="Password" 
-            Required="true" 
-            InputType="@PasswordInput" 
-            Adornment="Adornment.End"                     
-            AdornmentIcon="@PasswordInputIcon" 
-            OnAdornmentClick="ChangePasswordVisibility"/>
+            Required="true"
+                      InputType="@_passwordInput"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@_passwordInputIcon"
+                      OnAdornmentClick="ChangePasswordVisibility"/>
         <MudButton Color="Color.Primary" Variant="Variant.Filled" Class="mt-5" Disabled="_disabled" OnClick="HandleValidSubmit">Login</MudButton>
     </MudPaper>
 </MudContainer>
+
 
 @code {
     private string _username = string.Empty;
@@ -38,23 +39,23 @@
     private bool _disabled => string.IsNullOrWhiteSpace(_password) || string.IsNullOrWhiteSpace(_username);
 
     //password Visibilty
-    bool isShow;
-    InputType PasswordInput = InputType.Password;
-    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    private bool _isShow;
+    InputType _passwordInput = InputType.Password;
+    string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
 
     void ChangePasswordVisibility()
     {
-        @if (isShow)
+        @if (_isShow)
         {
-            isShow = false;
-            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
-            PasswordInput = InputType.Password;
+            _isShow = false;
+            _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+            _passwordInput = InputType.Password;
         }
         else
         {
-            isShow = true;
-            PasswordInputIcon = Icons.Material.Filled.Visibility;
-            PasswordInput = InputType.Text;
+            _isShow = true;
+            _passwordInputIcon = Icons.Material.Filled.Visibility;
+            _passwordInput = InputType.Text;
         }
     }
 
