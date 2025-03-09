@@ -10,8 +10,6 @@ namespace OrderManagement.Data.Models
         public DateTime OrderDate { get; set; } = DateTime.Now;
         public bool Paid { get; set; }
         public bool Removed { get; set; } = false;
-        [NotMapped]
-        public bool ShowDetails { get; set; } = false;
 
         public decimal GetTotalDueAmount()
         {

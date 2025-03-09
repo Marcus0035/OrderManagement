@@ -7,27 +7,27 @@
 
 @page "/orders-grid"
 
-
 <PageTitle>Orders</PageTitle>
 
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
     <MudDataGrid T="Order"
-                 Items="@_orders"
-                 SelectedItems="@_selectedOrders"
-                 Filterable="true"
-                 SortMode="SortMode.Multiple"
-                 QuickFilter="@QuickFilter"
-                 Hideable="true"
-                 FooterClass="d-none"
-                 Striped Bordered Hover
-                 RowClick="OpenOrderDetails">
+    Items="@_orders"
+    SelectedItems="@_selectedOrders"
+    Filterable="true"
+    SortMode="SortMode.Multiple"
+    QuickFilter="@QuickFilter"
+    Hideable="true"
+    FooterClass="d-none"
+    Striped Bordered Hover
+    RowClick="OpenOrderDetails"
+    HeaderClass="customHeaderClass">
 
         <ToolBarContent>
             <MudText Typo="Typo.h6">Orders</MudText>
             <MudSpacer />
             <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
-                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
             <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Medium" OnClick="OpenAddOrderPage" />
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium" Disabled="@_disableDeleteAndPay" OnClick="RemoveOrders" />
             <MudIconButton Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Success" Size="Size.Medium" Disabled="@_disableDeleteAndPay" OnClick="PayOrders" />
@@ -62,6 +62,11 @@
     </MudDataGrid>
 </MudContainer>
 
+<style>
+    .customHeaderClass {
+    @GetHeaderClass();
+    }
+</style>
 
 @code {
     private List<Order> _orders = new();
@@ -69,7 +74,6 @@
     private string _searchString = string.Empty;
 
     private bool _disableDeleteAndPay => _selectedOrders.Count() == 0;
-
     protected override async Task OnInitializedAsync()
     {
         CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("cs-CZ");
@@ -106,6 +110,23 @@
         await _context.ChangePaymentStatusAsync(_selectedOrders);
         _selectedOrders.Clear();
     }
+
+    private void OpenAddOrderPage()
+    {
+        _navigationManager.NavigateTo("/add-edit-order");
+    }
+    private void OpenOrderDetails(DataGridRowClickEventArgs<Order> args)
+    {
+        var order = args.Item;
+
+        _navigationManager.NavigateTo($"/add-edit-order/{order.Id}");
+    }
+
+    //Styles
+    //header color
+    private string HeaderBackgroundColor => $"{Colors.Grey.Lighten4}";
+    private string GetHeaderClass() => $"background-color:{HeaderBackgroundColor};";
+
     // bagde
     private Color GetBadgeColor(bool paid)
     {
@@ -116,18 +137,4 @@
     {
         return paid ? "Paid" : "Unpaid";
     }
-
-    private void OpenAddOrderPage()
-    {
-        _navigationManager.NavigateTo("/add-edit-order");
-    }
-    private async Task OpenOrderDetails(DataGridRowClickEventArgs<Order> args)
-    {
-        var order = args.Item;
-
-        _navigationManager.NavigateTo($"/add-edit-order/{order.Id}");
-    }
-
-
-
 }

@@ -4,11 +4,13 @@
 @using MudBlazor.Services
 
 @inject OrderManagementContext _context
-@inject IDialogService DialogService
+@inject IDialogService _dialogService
+@inject ISnackbar _snackbar
 
 @page "/items-grid"
 
 <PageTitle>Items</PageTitle>
+
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
     <MudDataGrid T="Item"
                  Items="@_items"
@@ -81,6 +83,7 @@
     private async Task EditItem(Item item)
     {
         await _context.PutItemAsync(item);
+        _snackbar.Add("Item updated", Severity.Success);
     }
 
 
@@ -91,11 +94,11 @@
     private async Task OpenAddItemDialog()
     {
         var parameters = new DialogParameters
-    {
-        { "OnItemAdded", EventCallback.Factory.Create(this, async () => await LoadItems()) }
-    };
+        {
+            { "OnItemAdded", EventCallback.Factory.Create(this, async () => await LoadItems()) }
+        };
 
-        var dialog = DialogService.Show<AddItem>("Add Item", parameters, _options);
+        var dialog = _dialogService.Show<AddItem>("Add Item", parameters, _options);
         await dialog.Result;
     }
 

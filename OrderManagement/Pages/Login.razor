@@ -3,44 +3,72 @@
 @using OrderManagement.Data.Models
 @using OrderManagement.Services
 
+@layout LoginLayout
+
 @inject OrderManagementContext _context
 @inject LoginHash _loginHash
 @inject ISnackbar _snackbar
 @inject NavigationManager _navigationManager
-@layout OrderManagement.Shared.LoginLayout
-
 
 @page "/"
 
 <PageTitle>Login</PageTitle>
 
-
 <MudContainer MaxWidth="MaxWidth.Small" Class="mt-5">
     <MudPaper Elevation="5" Class="pa-4">
         <MudText Align="Align.Center" Typo="Typo.h6">Enter your creditals (or password 123)</MudText>
         <MudTextField @bind-Value="_username" Label="Username" Required="true" />
-        <MudTextField @bind-Value="_password" Label="Password" InputType="InputType.Password" Required="true" />
+        @* password *@
+        <MudTextField
+            @bind-Value="_password" 
+            Label="Password" 
+            Required="true" 
+            InputType="@PasswordInput" 
+            Adornment="Adornment.End"                     
+            AdornmentIcon="@PasswordInputIcon" 
+            OnAdornmentClick="ChangePasswordVisibility"/>
         <MudButton Color="Color.Primary" Variant="Variant.Filled" Class="mt-5" Disabled="_disabled" OnClick="HandleValidSubmit">Login</MudButton>
     </MudPaper>
 </MudContainer>
-
 
 @code {
     private string _username = string.Empty;
     private string _password = string.Empty;
 
-    private bool _disabled => string.IsNullOrWhiteSpace(_password) || string.IsNullOrWhiteSpace(_username) || _isLogin;
-    private bool _isLogin = false;
+    private bool _disabled => string.IsNullOrWhiteSpace(_password) || string.IsNullOrWhiteSpace(_username);
 
+    //password Visibilty
+    bool isShow;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    void ChangePasswordVisibility()
+    {
+        @if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    //login
     private async Task HandleValidSubmit()
     {
-        _isLogin = true;
-        bool correctUsername = await _context.ExistingUsername(_username);
+        // hardcoded password for testing purposes
         if (_password == "123")
         {
             SuccesLogin();
             return;
         }
+
+        bool correctUsername = await _context.ExistingUsername(_username);
 
         if (!correctUsername)
         {
@@ -63,7 +91,6 @@
                 _snackbar.Add("Invalid username or password", Severity.Error);
             }
         }
-        _isLogin = false;
     }
 
     private void SuccesLogin()

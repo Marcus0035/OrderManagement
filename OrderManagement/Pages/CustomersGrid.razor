@@ -1,34 +1,35 @@
-﻿@page "/customers-grid"
-@using OrderManagement.Data.Models
+﻿@using OrderManagement.Data.Models
 @using OrderManagement.Data
 @using OrderManagement.Shared.Modals
 @using MudBlazor.Services
 
 @inject OrderManagementContext _context
-@inject IDialogService DialogService
+@inject IDialogService _dialogService
+
+@page "/customers-grid"
 
 <PageTitle>Customers</PageTitle>
+
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
     <MudDataGrid T="Customer"
-    Items="@_customers"
-    Filterable="true"
-    SortMode="SortMode.Multiple"
-    QuickFilter="@QuickFilter"
-    Hideable="true"
-    SelectedItems="_selectedCustomers"
-    ReadOnly="false"
-    FooterClass="d-none"
-    EditMode="DataGridEditMode.Cell"
-    CommittedItemChanges="EditCustomer"
-    Striped Bordered Hover>
+                 Items="@_customers"
+                 Filterable="true"
+                 SortMode="SortMode.Multiple"
+                 QuickFilter="@QuickFilter"
+                 Hideable="true"
+                 SelectedItems="_selectedCustomers"
+                 ReadOnly="false"
+                 FooterClass="d-none"
+                 RowClick="(c) => OpenAddPlayerDialog(c.Item.Id)"
+                 Striped Bordered Hover>
 
         <ToolBarContent>
             <MudText Typo="Typo.h6">Customers</MudText>
             <MudSpacer />
             <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
-            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium" Disabled="@_disableDelete" OnClick="RemoveCustomers" />
-            <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Medium" OnClick="OpenAddPlayerDialog" />
+            <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Medium" OnClick="() => OpenAddPlayerDialog()" />
         </ToolBarContent>
         <Columns>
             <SelectColumn T="Customer" ShowInHeader="false" />
@@ -67,7 +68,6 @@
 
     private async Task LoadCustomers()
     {
-
         _customers = await _context.GetCustomersAsync();
     }
 
@@ -98,23 +98,20 @@
         _selectedCustomers.Clear();
     }
 
-    private async Task EditCustomer(Customer customer)
-    {
-        await _context.PutCustomerAsync(customer);
-    }
 
     // modal
 
     private readonly DialogOptions _options = new() { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseOnEscapeKey = true };
 
-    private async Task OpenAddPlayerDialog()
+    private async Task OpenAddPlayerDialog(int customerId = 0)
     {
         var parameters = new DialogParameters
-    {
-        { "OnCustomerAdded", EventCallback.Factory.Create(this, async () => await LoadCustomers()) }
-    };
+        {
+            { "CustomerId", customerId },
+            { "OnCustomerAdded", EventCallback.Factory.Create(this, async () => await LoadCustomers()) }
+        };
 
-        var dialog = DialogService.Show<AddCustomer>("Add Customer", parameters, _options);
+        var dialog = _dialogService.Show<AddEditCustomer>("Add Customer", parameters, _options);
         await dialog.Result;
     }
 

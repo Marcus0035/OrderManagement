@@ -14,7 +14,7 @@
         <MudItem>
             <MudGrid Spacing="3">
                 <MudItem xs="12">
-                    <MudSelect Label="Customer" @bind-Value="model.CustomerId" Required RequiredError="Customer is required!">
+                    <MudSelect Label="Customer" @bind-Value="_model.CustomerId" Required RequiredError="Customer is required!">
                         <MudSelectItem Value="0" Disabled>-- Select Customer --</MudSelectItem>
                         @foreach (var customer in _customers)
                         {
@@ -24,17 +24,17 @@
 
                 </MudItem>
                 <MudItem xs="12">
-                    <MudDatePicker Label="Date" Date="model.Date" DateChanged="@(args => ChangeDate(args))" Required RequiredError="Date is required!" Class="w-100" />
+                    <MudDatePicker Label="Date" Date="_model.Date" DateChanged="@(args => ChangeDate(args))" Required RequiredError="Date is required!" Class="w-100" />
                 </MudItem>
                 <MudItem xs="12" Class="d-flex justify-space-between">
-                    <MudSwitch Label="Paid" Color="Color.Primary" @bind-Value="model.Paid" />
+                    <MudSwitch Label="Paid" Color="Color.Primary" @bind-Value="_model.Paid" />
                     <MudText Typo="Typo.h6">
                         Total: @GetTotalAmount().ToString("C", new System.Globalization.CultureInfo("cs-CZ"))
                     </MudText>
                 </MudItem>
                 <MudItem xs="12">
                     <MudExpansionPanels MultiExpansion="true" @ref="_expansionPanels">
-                        @foreach (var item in model.ItemOrders)
+                        @foreach (var item in _model.ItemOrders)
                         {
                             <MudExpansionPanel Text="@item.Item.Name" Icon="@Icons.Material.Filled.ExpandMore">
                                 <MudGrid Spacing="2" Class="pa-3">
@@ -94,12 +94,11 @@
     [Parameter]
     public int? SelectedOrderId { get; set; }
 
-
     private List<Customer> _customers = new();
     private List<Item> _items = new();
     private List<Item> _notUsedItems = new();
     private MudForm form;
-    OrderRegister model = new();
+    private OrderRegister _model = new();
     private int _newItemId;
     private MudExpansionPanels _expansionPanels;
     private int _newItemQuantity = 1;
@@ -113,14 +112,47 @@
 
         if (SelectedOrderId != null)
         {
-            model = RegisterFromClass(await _context.GetOrderAsync((int)SelectedOrderId));
-            var usedItemIds = new HashSet<int>(model.ItemOrders.Select(io => io.ItemId));
+            _model = RegisterFromClass(await _context.GetOrderAsync((int)SelectedOrderId));
+            var usedItemIds = new HashSet<int>(_model.ItemOrders.Select(io => io.ItemId));
             _notUsedItems = _items.Where(item => !usedItemIds.Contains(item.Id)).ToList();
             _editing = true;
         }
     }
 
+    //handle _notUsedItems
+    private void AddNewItem()
+    {
+        var item = _items.FirstOrDefault(i => i.Id == _newItemId);
+        if (item != null)
+        {
+            _model.ItemOrders.Add(new ItemOrder
+                {
+                    Item = item,
+                    Quantity = _newItemQuantity
+                });
 
+            _notUsedItems.Remove(item);
+            _newItemId = 0;
+        }
+    }
+    private void RemoveItem(ItemOrder itemOrder)
+    {
+        _model.ItemOrders.Remove(itemOrder);
+        _notUsedItems.Add(itemOrder.Item);
+    }
+
+    //expand panel
+    private void ExpandAll()
+    {
+        _expansionPanels.ExpandAll();
+    }
+    private void CollapseAll()
+    {
+        _expansionPanels.CollapseAll();
+    }
+
+    //form
+    //convert to/from class
     private class OrderRegister
     {
         public int CustomerId { get; set; }
@@ -128,7 +160,6 @@
         public bool Paid { get; set; }
         public List<ItemOrder> ItemOrders { get; set; } = new();
     }
-
     private OrderRegister RegisterFromClass(Order order)
     {
         return new OrderRegister
@@ -159,59 +190,26 @@
                 Paid = orderRegister.Paid
             };
     }
+
     private bool IsFormValid()
     {
-        return model.CustomerId > 0 && model.ItemOrders.Count > 0;
+        return _model.CustomerId > 0 && _model.ItemOrders.Count > 0;
     }
-
 
     private void ChangeDate(DateTime? newDate)
     {
         if (newDate != null)
-            model.Date = (DateTime)newDate;
+            _model.Date = (DateTime)newDate;
     }
-
 
     private decimal GetTotalAmount()
     {
-        return model.ItemOrders.Sum(io => io.Quantity * io.Item.Price);
-    }
-
-    private void AddNewItem()
-    {
-        var item = _items.FirstOrDefault(i => i.Id == _newItemId);
-        if (item != null)
-        {
-            model.ItemOrders.Add(new ItemOrder
-                {
-                    Item = item,
-                    Quantity = _newItemQuantity
-                });
-
-            _notUsedItems.Remove(item);
-            _newItemId = 0;
-        }
-    }
-
-    private void RemoveItem(ItemOrder itemOrder)
-    {
-        model.ItemOrders.Remove(itemOrder);
-        _notUsedItems.Add(itemOrder.Item);
-    }
-
-    private void ExpandAll()
-    {
-        _expansionPanels.ExpandAll();
-    }
-
-    private void CollapseAll()
-    {
-        _expansionPanels.CollapseAll();
+        return _model.ItemOrders.Sum(io => io.Quantity * io.Item.Price);
     }
 
     private async Task SaveEditOrder()
     {
-        Order order = ClassFromRegister(model);
+        Order order = ClassFromRegister(_model);
         if (_editing)
         {
             order.Id = (int)SelectedOrderId!;

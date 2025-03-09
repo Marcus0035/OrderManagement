@@ -1,0 +1,100 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using OrderManagement.Data.Models
+@using OrderManagement.Data
+
+@inject ISnackbar Snackbar
+@inject OrderManagementContext _context
+@inject NavigationManager _navigationManager
+
+<MudDialog>
+    <TitleContent>
+        <MudText>Add Customer</MudText>
+    </TitleContent>
+    <DialogContent>
+        <EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudCardContent>
+                        <MudTextField Label="Name"
+                                      @bind-Value="_model.Name" For="@(() => _model.Name)" />
+                        <MudTextField Label="Email" Class="mt-3"
+                                      @bind-Value="_model.Email" For="@(() => _model.Email)" />
+                        <MudNumericField Label="Phone" Class="mt-3"
+                                      @bind-Value="_model.Phone" For="@(() => _model.Phone)" />
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mlauto">Register</MudButton>
+                    </MudCardActions>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance _mudDialog { get; set; }
+    private bool _editing = false;
+    private CustomerRegister _model = new CustomerRegister();
+
+    [Parameter]
+    public EventCallback OnCustomerAdded { get; set; }
+    [Parameter]
+    public int CustomerId { get; set; }
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = new CustomerRegister();
+        if (CustomerId != 0)
+        {
+            _editing = true;
+            Customer customer = await _context.GetCustomerAsync(CustomerId);
+            _model.Name = customer.Name;
+            _model.Email = customer.Email;
+            _model.Phone = customer.Phone;
+        }
+    }
+
+
+    public class CustomerRegister
+    {
+        [Required]
+        public string Name { get; set; }
+
+        [Required(ErrorMessage = "Email is required.")]
+        [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
+        ErrorMessage = "Invalid email format.")]
+        public string Email { get; set; }
+
+        [Required(ErrorMessage = "Phone number is required.")]
+        [RegularExpression(@"^\+?(\d{1,3})?[ -]?(\d{3})[ -]?(\d{3})[ -]?(\d{3,4})$",
+            ErrorMessage = "Invalid phone number format.")]
+        public string Phone { get; set; }
+    }
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        Customer customer = new Customer(_model.Name, _model.Email, _model.Phone);
+        if (_editing)
+        {
+            customer.Id = CustomerId;
+            await _context.PutCustomerAsync(customer);
+            Snackbar.Add("Customer edited", Severity.Success);
+        }
+        else
+        {
+            await _context.PostCustomerAsync(customer);
+            Snackbar.Add("Customer added", Severity.Success);
+        }
+
+        _mudDialog.Close(DialogResult.Ok(true));
+
+        if (OnCustomerAdded.HasDelegate)
+        {
+            await OnCustomerAdded.InvokeAsync();
+        }
+    }
+}

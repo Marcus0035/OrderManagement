@@ -15,7 +15,6 @@ namespace OrderManagement.Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(@"Server=(localdb)\MSSQLLocalDB;Database=OrderManagementDb;Trusted_Connection=True;");
-
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -43,14 +42,18 @@ namespace OrderManagement.Data
         }
         public async Task<string> GetHashedPasswordForUser(string username)
         {
-            var user = await UserSettings.FirstOrDefaultAsync(x => x.Username == username);
-            return user?.HashedPassword ?? string.Empty;
+            var user = await UserSettings.FirstAsync(x => x.Username == username);
+            return user.HashedPassword;
         }
 
         //Customer
         public async Task<List<Customer>> GetCustomersAsync()
         {
             return await Customers.Where(x => !x.Removed).ToListAsync();
+        }
+        public async Task<Customer> GetCustomerAsync(int Id)
+        {
+            return await Customers.FirstAsync(x => x.Id == Id);
         }
         public async Task PostCustomerAsync(Customer customer)
         {
@@ -60,7 +63,7 @@ namespace OrderManagement.Data
         public async Task PutCustomerAsync(Customer customer)
         {
             var existingCustomer = Customers.First(x => x.Id == customer.Id);
-            existingCustomer = customer;
+            Entry(existingCustomer).CurrentValues.SetValues(customer);
             await SaveChangesAsync();
 
         }
@@ -139,16 +142,12 @@ namespace OrderManagement.Data
                 }
             }
             else
-    {
-        Orders.Update(order);
-    }
+            {
+                Orders.Update(order);
+            }
 
             await SaveChangesAsync();
         }
-
-
-
-
 
         //ItemOrder
         public async Task<List<ItemOrder>> GetItemOrdersAsync()
