@@ -27,7 +27,7 @@ Before setting up the project, ensure you have the following installed:
 Follow these steps to get the project up and running on your local machine:
    ```bash
    git clone https://github.com/Marcus0035/OrderManagement
-   cd OrderManagement
+   cd OrderManagement\OrderManagement
    dotnet restore
    dotnet run
    ```
